@@ -9,14 +9,13 @@ final class ClipboardStore: ObservableObject {
     private let pasteboard = NSPasteboard.general
     private let historyLimit = 50
     private let defaultsKey = "clipboard.entries"
-    private var lastChangeCount: Int
+    private var lastChangeCount = -1
     private var timer: Timer?
 
     init() {
-        lastChangeCount = pasteboard.changeCount
         loadEntries()
-        startMonitoring()
         captureCurrentPasteboardIfNeeded()
+        startMonitoring()
     }
 
     var pinnedEntries: [ClipboardEntry] {
@@ -51,9 +50,8 @@ final class ClipboardStore: ObservableObject {
         guard pasteboard.changeCount != lastChangeCount else { return }
         lastChangeCount = pasteboard.changeCount
 
-        guard let text = pasteboard.string(forType: .string)?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-              !text.isEmpty else {
+        guard let text = pasteboard.string(forType: .string),
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
 
