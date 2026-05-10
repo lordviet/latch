@@ -1,5 +1,5 @@
 PACKAGE_DIR := ClipboardLatch
-APP_PATH := dist/ClipboardLatch.app
+APP_PATH := dist/Latch.app
 
 .PHONY: help build run open clean
 

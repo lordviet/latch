@@ -3,12 +3,13 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-APP_DIR="$ROOT_DIR/dist/ClipboardLatch.app"
+APP_DIR="$ROOT_DIR/dist/Latch.app"
+LEGACY_APP_DIR="$ROOT_DIR/dist/ClipboardLatch.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 PACKAGE_DIR="$ROOT_DIR/ClipboardLatch"
-EXECUTABLE="$PACKAGE_DIR/.build/release/ClipboardLatch"
+EXECUTABLE="$PACKAGE_DIR/.build/release/Latch"
 ICON_SOURCE="$PACKAGE_DIR/latch-icon.png"
 ICONSET_DIR="$ROOT_DIR/dist/AppIcon.iconset"
 
@@ -20,10 +21,10 @@ env \
   HOME="$PACKAGE_DIR" \
   swift build -c release --package-path "$PACKAGE_DIR"
 
-rm -rf "$APP_DIR"
+rm -rf "$APP_DIR" "$LEGACY_APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
-cp "$EXECUTABLE" "$MACOS_DIR/ClipboardLatch"
+cp "$EXECUTABLE" "$MACOS_DIR/Latch"
 cp "$ROOT_DIR/ClipboardLatch/Resources/Info.plist" "$CONTENTS_DIR/Info.plist"
 printf 'APPL????' > "$CONTENTS_DIR/PkgInfo"
 

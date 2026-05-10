@@ -2,19 +2,19 @@
 import PackageDescription
 
 let package = Package(
-    name: "ClipboardLatch",
+    name: "Latch",
     platforms: [
         .macOS(.v14)
     ],
     products: [
         .executable(
-            name: "ClipboardLatch",
-            targets: ["ClipboardLatch"]
+            name: "Latch",
+            targets: ["Latch"]
         )
     ],
     targets: [
         .executableTarget(
-            name: "ClipboardLatch",
+            name: "Latch",
             path: "Sources"
         )
     ]

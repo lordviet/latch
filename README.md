@@ -11,6 +11,7 @@ Current status:
 - Restore an entry to the clipboard and paste it into the previously focused app
 - Native status bar menu with About, Settings, and Quit
 - Custom bundled app icon sourced from `ClipboardLatch/latch-icon.png`
+- History selection and scroll position reset to the top item each time the panel opens
 
 ## Project Layout
 
@@ -34,7 +35,7 @@ make build
 make open
 ```
 
-Once you launch the real app, grant Accessibility permission to `ClipboardLatch.app` instead of your terminal so simulated paste works reliably.
+Once you launch the real app, grant Accessibility permission to `Latch.app` instead of your terminal so simulated paste works reliably. If auto-paste stops working after rebuilding, remove the old `Latch` Accessibility entry, quit the app, rebuild, reopen `dist/Latch.app`, and grant access to the new bundle.
 
 You can still call `./scripts/build_app.sh` directly, but `make` is the primary interface now.
 

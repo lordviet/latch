@@ -11,6 +11,7 @@ This repository contains a lightweight macOS clipboard manager. The current prod
 - Prefer small, explicit abstractions over framework-heavy structure.
 - Preserve a clear separation between clipboard capture, persistence, UI, and paste automation.
 - Optimize for real local usage on macOS before adding breadth.
+- The built app bundle is `dist/Latch.app`; keep app naming, executable naming, and docs aligned around `Latch`.
 
 ## Working Rules
 
@@ -19,6 +20,8 @@ This repository contains a lightweight macOS clipboard manager. The current prod
 - Keep generated artifacts out of git.
 - Favor deterministic scripts for building and bundling the app, exposed through a simple `Makefile`.
 - Before adding new clipboard types, keep the text path working end-to-end.
+- Default history UX should optimize for fast recent paste, so reopening the panel should start from the top item.
+- Auto-paste depends on macOS Accessibility trust. Rebuilt ad-hoc signed bundles may need the old Accessibility entry removed and the new `Latch.app` granted again.
 
 ## Near-Term Roadmap
 

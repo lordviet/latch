@@ -5,18 +5,21 @@ import SwiftUI
 @MainActor
 final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
     private var previouslyActiveApp: NSRunningApplication?
+    private var selectedEntryID: ClipboardEntry.ID?
+    private var didRequestAccessibilityPermission = false
     private let store: ClipboardStore
+    private let currentProcessIdentifier = ProcessInfo.processInfo.processIdentifier
 
     init(store: ClipboardStore) {
         self.store = store
-        let panel = NSPanel(
+        let panel = ClipboardPanel(
             contentRect: NSRect(x: 0, y: 0, width: 560, height: 420),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
 
-        panel.title = "ClipboardLatch"
+        panel.title = "Latch"
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
@@ -24,6 +27,9 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
 
         super.init(window: panel)
         panel.delegate = self
+        panel.onReturnKey = { [weak self] in
+            self?.useSelectedEntry()
+        }
         updateContentView()
     }
 
@@ -34,7 +40,11 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
 
     func showPanel(forceFront: Bool = false) {
         guard let window else { return }
-        previouslyActiveApp = NSWorkspace.shared.frontmostApplication
+        if let frontmostApp = NSWorkspace.shared.frontmostApplication,
+           frontmostApp.processIdentifier != currentProcessIdentifier {
+            previouslyActiveApp = frontmostApp
+        }
+        updateContentView()
         NSApp.activate(ignoringOtherApps: true)
         window.center()
         window.orderFrontRegardless()
@@ -54,26 +64,69 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
     }
 
     private func updateContentView() {
-        let rootView = ClipboardHistoryView(store: store) { [weak self] entry in
-            self?.store.activate(entry)
-            self?.pasteIntoPreviousAppAndClose()
-        }
+        let rootView = ClipboardHistoryView(
+            store: store,
+            onUse: { [weak self] entry in
+                self?.use(entry)
+            },
+            onSelectionChange: { [weak self] selection in
+                self?.selectedEntryID = selection
+            }
+        )
 
         window?.contentView = NSHostingView(rootView: rootView)
     }
 
-    private func pasteIntoPreviousAppAndClose() {
-        window?.orderOut(nil)
+    private func useSelectedEntry() {
+        let selectedEntry = selectedEntryID.flatMap { selectedID in
+            store.entries.first { $0.id == selectedID }
+        }
 
-        guard let targetApp = previouslyActiveApp else {
+        guard let entry = selectedEntry ?? store.entries.first else { return }
+        use(entry)
+    }
+
+    private func use(_ entry: ClipboardEntry) {
+        selectedEntryID = entry.id
+        store.activate(entry)
+        pasteIntoPreviousAppAndClose()
+    }
+
+    private func pasteIntoPreviousAppAndClose() {
+        guard ensureAccessibilityPermission() else {
+            NSSound.beep()
             return
         }
 
+        window?.orderOut(nil)
+
+        guard let targetApp = previouslyActiveApp else {
+            NSApp.hide(nil)
+            return
+        }
+
+        NSApp.hide(nil)
         targetApp.activate()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             self.sendCommandV()
         }
+    }
+
+    private func ensureAccessibilityPermission() -> Bool {
+        if AXIsProcessTrusted() {
+            return true
+        }
+
+        guard !didRequestAccessibilityPermission else {
+            return false
+        }
+
+        didRequestAccessibilityPermission = true
+        let options = [
+            "AXTrustedCheckOptionPrompt" as CFString: true
+        ] as CFDictionary
+        return AXIsProcessTrustedWithOptions(options)
     }
 
     private func sendCommandV() {
@@ -87,5 +140,18 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
         keyUp.flags = .maskCommand
         keyDown.post(tap: .cghidEventTap)
         keyUp.post(tap: .cghidEventTap)
+    }
+}
+
+private final class ClipboardPanel: NSPanel {
+    var onReturnKey: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 36, 76:
+            onReturnKey?()
+        default:
+            super.keyDown(with: event)
+        }
     }
 }

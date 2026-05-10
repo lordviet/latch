@@ -3,6 +3,7 @@ import SwiftUI
 struct ClipboardHistoryView: View {
     @ObservedObject var store: ClipboardStore
     let onUse: (ClipboardEntry) -> Void
+    let onSelectionChange: (ClipboardEntry.ID?) -> Void
 
     @State private var selection: ClipboardEntry.ID?
 
@@ -59,8 +60,17 @@ struct ClipboardHistoryView: View {
         .padding(16)
         .frame(width: 560, height: 420)
         .onAppear {
-            selection = store.entries.first?.id
+            resetSelection()
         }
+        .onChange(of: selection) { _, newSelection in
+            onSelectionChange(newSelection)
+        }
+    }
+
+    private func resetSelection() {
+        let topEntryID = store.entries.first?.id
+        selection = topEntryID
+        onSelectionChange(topEntryID)
     }
 
     private func use(_ entry: ClipboardEntry) {
