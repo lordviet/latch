@@ -40,7 +40,7 @@ struct ClipboardHistoryView: View {
             .frame(minHeight: 320)
 
             HStack {
-                Text("Shortcut: Cmd+Shift+V")
+                Text("Open: Cmd+Shift+V | Pin: Cmd+P")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

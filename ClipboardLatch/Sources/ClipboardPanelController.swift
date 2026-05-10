@@ -30,6 +30,9 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
         panel.onReturnKey = { [weak self] in
             self?.useSelectedEntry()
         }
+        panel.onPinKey = { [weak self] in
+            self?.togglePinForSelectedEntry()
+        }
         updateContentView()
     }
 
@@ -84,6 +87,16 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
 
         guard let entry = selectedEntry ?? store.entries.first else { return }
         use(entry)
+    }
+
+    private func togglePinForSelectedEntry() {
+        let selectedEntry = selectedEntryID.flatMap { selectedID in
+            store.entries.first { $0.id == selectedID }
+        }
+
+        guard let entry = selectedEntry ?? store.entries.first else { return }
+        selectedEntryID = entry.id
+        store.togglePin(for: entry)
     }
 
     private func use(_ entry: ClipboardEntry) {
@@ -145,8 +158,16 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
 
 private final class ClipboardPanel: NSPanel {
     var onReturnKey: (() -> Void)?
+    var onPinKey: (() -> Void)?
 
     override func keyDown(with event: NSEvent) {
+        let modifierFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if modifierFlags == .command,
+           event.charactersIgnoringModifiers?.lowercased() == "p" {
+            onPinKey?()
+            return
+        }
+
         switch event.keyCode {
         case 36, 76:
             onReturnKey?()
