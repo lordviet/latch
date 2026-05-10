@@ -32,12 +32,21 @@ final class ClipboardPanelController: NSWindowController, NSWindowDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func showPanel() {
+    func showPanel(forceFront: Bool = false) {
         guard let window else { return }
         previouslyActiveApp = NSWorkspace.shared.frontmostApplication
         NSApp.activate(ignoringOtherApps: true)
         window.center()
-        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        window.makeKey()
+        if forceFront {
+            window.level = .modalPanel
+        } else {
+            window.level = .floating
+        }
+        DispatchQueue.main.async {
+            window.makeKeyAndOrderFront(nil)
+        }
     }
 
     func windowWillClose(_ notification: Notification) {

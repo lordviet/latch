@@ -8,10 +8,14 @@
     <string>ClipboardLatch</string>
     <key>CFBundleIdentifier</key>
     <string>com.lordviet.latch</string>
+    <key>CFBundleDisplayName</key>
+    <string>Latch</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>ClipboardLatch</string>
+    <string>Latch</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
