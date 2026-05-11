@@ -32,6 +32,12 @@ final class ClipboardStore: ObservableObject {
         persistEntries()
     }
 
+    func delete(_ entry: ClipboardEntry) {
+        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
+        entries.remove(at: index)
+        persistEntries()
+    }
+
     func activate(_ entry: ClipboardEntry) {
         pasteboard.clearContents()
         pasteboard.setString(entry.text, forType: .string)
