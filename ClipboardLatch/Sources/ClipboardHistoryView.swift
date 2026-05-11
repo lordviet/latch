@@ -19,6 +19,7 @@ struct ClipboardHistoryView: View {
                             ClipboardRow(
                                 entry: entry,
                                 onPinToggle: { store.togglePin(for: entry) },
+                                onDelete: { delete(entry) },
                                 onUse: { use(entry) }
                             )
                             .tag(entry.id)
@@ -31,6 +32,7 @@ struct ClipboardHistoryView: View {
                         ClipboardRow(
                             entry: entry,
                             onPinToggle: { store.togglePin(for: entry) },
+                            onDelete: { delete(entry) },
                             onUse: { use(entry) }
                         )
                         .tag(entry.id)
@@ -40,11 +42,20 @@ struct ClipboardHistoryView: View {
             .frame(minHeight: 320)
 
             HStack {
-                Text("Open: Cmd+Shift+V | Pin: Cmd+P")
+                Text("Open: Cmd+Shift+V | Pin: Cmd+P | Delete: Del")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 Spacer()
+
+                Button {
+                    deleteSelected()
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .keyboardShortcut(.delete, modifiers: [])
+                .disabled(selection == nil)
+                .help("Delete Selected")
 
                 Button("Paste Selected") {
                     guard let selection,
@@ -77,11 +88,51 @@ struct ClipboardHistoryView: View {
         selection = entry.id
         onUse(entry)
     }
+
+    private func delete(_ entry: ClipboardEntry) {
+        let nextSelection = nextSelection(afterDeleting: entry.id, from: orderedEntriesForSelection())
+
+        selection = nextSelection
+        store.delete(entry)
+    }
+
+    private func deleteSelected() {
+        guard let selection,
+              let entry = orderedEntriesForSelection().first(where: { $0.id == selection }) else {
+            return
+        }
+
+        delete(entry)
+    }
+
+    private func orderedEntriesForSelection() -> [ClipboardEntry] {
+        store.pinnedEntries + store.recentEntries
+    }
+
+    private func nextSelection(
+        afterDeleting entryID: ClipboardEntry.ID,
+        from entries: [ClipboardEntry]
+    ) -> ClipboardEntry.ID? {
+        guard let deletedIndex = entries.firstIndex(where: { $0.id == entryID }) else {
+            return entries.first?.id
+        }
+
+        if entries.count <= 1 {
+            return nil
+        }
+
+        if deletedIndex < entries.index(before: entries.endIndex) {
+            return entries[entries.index(after: deletedIndex)].id
+        }
+
+        return entries[entries.index(before: deletedIndex)].id
+    }
 }
 
 private struct ClipboardRow: View {
     let entry: ClipboardEntry
     let onPinToggle: () -> Void
+    let onDelete: () -> Void
     let onUse: () -> Void
 
     var body: some View {
@@ -93,6 +144,7 @@ private struct ClipboardRow: View {
                     .foregroundStyle(entry.isPinned ? .orange : .secondary)
             }
             .buttonStyle(.borderless)
+            .help(entry.isPinned ? "Unpin Entry" : "Pin Entry")
 
             Button(action: onUse) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -108,6 +160,15 @@ private struct ClipboardRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+
+            Button {
+                onDelete()
+            } label: {
+                Image(systemName: "trash")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.borderless)
+            .help("Delete Entry")
         }
         .padding(.vertical, 4)
     }
